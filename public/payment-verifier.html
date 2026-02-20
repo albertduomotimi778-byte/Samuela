@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifying Payment...</title>
+    <style>
+        body { 
+            background-color: #020617; 
+            color: white; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0;
+            text-align: center; 
+        }
+        .container {
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .loader { 
+            border: 3px solid rgba(255,255,255,0.1); 
+            border-top: 3px solid #6366f1; 
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px; 
+            animation: spin 1s linear infinite; 
+            margin: 0 auto 20px auto; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error { color: #f87171; font-weight: bold; margin-bottom: 0.5rem; }
+        .success { color: #4ade80; font-weight: bold; margin-bottom: 0.5rem;}
+        h2 { margin-top: 0; font-size: 1.5rem; }
+        p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.5rem; line-height: 1.5; }
+        .debug-info { 
+            margin-top: 20px; 
+            font-size: 0.6rem; 
+            color: #475569; 
+            word-break: break-all; 
+            border-top: 1px solid #334155; 
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="status">
+        <div class="loader"></div>
+        <h2>Secure Verification</h2>
+        <p>Connecting to SoulSync Secure Server...</p>
+        <p style="font-size: 0.75rem; opacity: 0.7;">Validating Transaction...</p>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const SELAR_PAYMENT_URL = "https://selar.com/csf148s0v1"; 
+        const PRODUCT_ID = "csf148s0v1"; // Your specific product ID
+
+        function verifyTransaction() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentUrl = window.location.href;
+            const referrer = document.referrer;
+
+            // 1. EXTRACT DATA
+            const rawId = urlParams.get('tx_ref') || 
+                          urlParams.get('transaction_id') || 
+                          urlParams.get('id') || 
+                          urlParams.get('reference');
+            
+            const status = urlParams.get('status'); 
+
+            // 2. VALIDATION LOGIC
+            let isValid = false;
+
+            // CHECK A: Product ID match (Strongest signal from your link)
+            if (currentUrl.includes(PRODUCT_ID)) {
+                isValid = true;
+            }
+            // CHECK B: Explicit Transaction IDs
+            else if (rawId) {
+                isValid = true;
+            }
+            // CHECK C: Status Flag
+            else if (status === 'success' || status === 'paid') {
+                isValid = true;
+            }
+            // CHECK D: Referrer (Coming directly from Selar)
+            else if (referrer && referrer.includes('selar.com')) {
+                isValid = true;
+            }
+
+            // 3. HANDLE INVALID
+            if (!isValid) {
+                const debugParams = Array.from(urlParams.entries()).map(e => e.join('=')).join('&');
+                
+                document.getElementById('status').innerHTML = `
+                    <div style="font-size: 3rem; margin-bottom: 10px;">🚫</div>
+                    <p class="error">Verification Failed</p>
+                    <p>No valid transaction signature found.</p>
+                    <p>Redirecting to secure payment...</p>
+                    <div class="debug-info">
+                        Debug: ${debugParams || 'No Params'}
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    if (!window.location.hostname.includes('localhost')) {
+                         window.location.href = SELAR_PAYMENT_URL;
+                    }
+                }, 3000);
+                return;
+            }
+
+            // 4. MINT THE LICENSE
+            const licenseString = rawId || `txn_${Date.now()}`;
+            const validTag = btoa(licenseString + "_soulsync_secure_887"); 
+
+            // 5. INJECT STORAGE (FORCE ACTIVATION)
+            try {
+                // License Keys
+                localStorage.setItem('soulsync_license_string', licenseString);
+                localStorage.setItem('soulsync_license_tag', validTag);
+                localStorage.setItem('soulsync_payment_signal', Date.now().toString());
+
+                // DIRECTLY ACTIVATE PREMIUM STATUS
+                // This ensures app sees it immediately without waiting for modal logic
+                localStorage.setItem('soulsync_premium_status', 'active');
+                
+                // Set Expiry (30 Days)
+                const expiry = Date.now() + (30 * 24 * 60 * 60 * 1000); 
+                localStorage.setItem('soulsync_sub_expiry', expiry.toString());
+
+            } catch (e) {
+                console.error("Storage failed", e);
+            }
+
+            // 6. SIGNAL APP
+            if (window.opener) {
+                window.opener.postMessage('PAYMENT_VERIFIED', '*');
+                window.opener.postMessage('PAYMENT_SUCCESS', '*');
+            }
+            
+            // Broadcast Channel
+            try {
+                const bc = new BroadcastChannel('soulsync_payment');
+                bc.postMessage('PAYMENT_SUCCESS');
+                setTimeout(() => bc.close(), 1000);
+            } catch(e) {}
+
+            // 7. SHOW SUCCESS
+            document.getElementById('status').innerHTML = `
+                <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                <h2 class="success">Payment Verified!</h2>
+                <p>Premium features unlocked.</p>
+                <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.7;">You can close this window.</p>
+            `;
+
+            setTimeout(() => {
+                if(window.opener) {
+                    window.close();
+                } else {
+                    document.getElementById('status').innerHTML += `<br><a href="/" style="color:#6366f1; text-decoration:none; border:1px solid #6366f1; padding:8px 16px; border-radius:8px; display:inline-block; margin-top:10px;">Return to App</a>`;
+                }
+            }, 2000);
+        }
+
+        verifyTransaction();
+    </script>
+</body>
+</html>

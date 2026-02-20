@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#020617" />
+    
+    <!-- Mobile Web App Capability -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <title>SoulSync</title>
+    <link rel="manifest" href="./manifest.json" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              // Dynamic Colors linked to CSS Variables
+              primary: 'var(--color-primary)',
+              'on-primary': 'var(--color-on-primary)', // New Tailwind Class
+              secondary: 'var(--color-secondary)',
+              dark: 'var(--color-bg-dark)',
+              darker: 'var(--color-bg-darker)',
+              surface: 'var(--color-bg-surface)',
+              txt: 'var(--color-text-main)',
+              muted: 'var(--color-text-muted)'
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            animation: {
+                'fade-in': 'fadeIn 0.3s ease-in-out',
+                'fade-in-up': 'fadeInUp 0.5s ease-out',
+                'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                'spin-slow': 'spin 3s linear infinite',
+                'shimmer': 'shimmer 2.5s infinite linear',
+                'float': 'float 3s ease-in-out infinite',
+                'wave': 'wave 1.2s ease-in-out infinite',
+                'spin-y-slow': 'spinY 8s linear infinite',
+            },
+            keyframes: {
+                fadeIn: {
+                    '0%': { opacity: '0' },
+                    '100%': { opacity: '1' },
+                },
+                fadeInUp: {
+                    '0%': { opacity: '0', transform: 'translateY(10px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                shimmer: {
+                    '0%': { transform: 'translateX(-150%) skewX(-15deg)' },
+                    '50%': { transform: 'translateX(150%) skewX(-15deg)' },
+                    '100%': { transform: 'translateX(150%) skewX(-15deg)' },
+                },
+                float: {
+                    '0%, 100%': { transform: 'translateY(0)' },
+                    '50%': { transform: 'translateY(-5px)' },
+                },
+                wave: {
+                    '0%, 100%': { height: '10%' },
+                    '50%': { height: '60%' },
+                },
+                spinY: {
+                    '0%': { transform: 'rotateY(0deg)' },
+                    '100%': { transform: 'rotateY(360deg)' },
+                }
+            }
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      
+      :root {
+        /* Default Theme (SoulSync Original) */
+        --color-primary: #6366f1;   /* Indigo */
+        --color-on-primary: #ffffff; /* Text on Primary */
+        --color-secondary: #a855f7; /* Purple */
+        --color-bg-darker: #020617; /* Very Dark Blue */
+        --color-bg-dark: #0f172a;   /* Dark Slate */
+        --color-bg-surface: #1e293b;
+        --color-text-main: #f8fafc;
+        --color-text-muted: #94a3b8;
+      }
+
+      html {
+        height: 100%;
+        overflow: hidden; /* Prevent elastic scrolling on root */
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--color-bg-darker);
+        color: var(--color-text-main);
+        /* Prevent pull-to-refresh on mobile */
+        overscroll-behavior-y: none;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        
+        /* Force full height with dynamic viewport support */
+        height: 100%;
+        height: 100dvh; 
+        width: 100%;
+        overflow: hidden;
+      }
+      
+      /* Smooth transitions for theme changes */
+      div, button, input, textarea {
+        transition-property: background-color, border-color, color;
+        transition-duration: 0.3s;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--color-bg-dark); 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155; 
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569; 
+      }
+      
+      /* 3D Utilities */
+      .perspective-1000 {
+          perspective: 1000px;
+      }
+      .preserve-3d {
+          transform-style: preserve-3d;
+      }
+      .backface-hidden {
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+      }
+      .rotate-y-180 {
+          transform: rotateY(180deg);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root" style="height: 100%; width: 100%;"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
